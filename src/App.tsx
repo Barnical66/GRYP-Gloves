@@ -1,9 +1,40 @@
 import { useState, useEffect } from "react";
+import type React from "react";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Check, Shield, Activity, Sparkles, Cpu, Droplets, Leaf, Gauge, TrendingUp, Github, Mail, SlidersHorizontal, Pointer, HeartPulse, BarChart3, Users, Image as ImageIcon } from "lucide-react";
+
+// ——— TS fix: declare the custom web component so TSX accepts <model-viewer> ———
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          src?: string;
+          poster?: string;
+          alt?: string;
+          'camera-controls'?: boolean;
+          'auto-rotate'?: boolean;
+          'auto-rotate-delay'?: string;
+          'rotation-per-second'?: string;
+          'min-camera-orbit'?: string;
+          'max-camera-orbit'?: string;
+          'field-of-view'?: string;
+          exposure?: string;
+          'environment-image'?: string;
+          'shadow-intensity'?: string;
+          'interaction-prompt'?: string;
+          reveal?: string;
+          style?: React.CSSProperties;
+        },
+        HTMLElement
+      >;
+    }
+  }
+}
+
 
 /* ——— 3D viewer (model-viewer) with graceful fallback ——— */
 function ModelViewer3D() {
