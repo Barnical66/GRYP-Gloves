@@ -11,8 +11,9 @@ import { Check, Shield, Activity, Sparkles, Cpu, Droplets, Leaf, Gauge, Trending
 function ModelViewer3D() {
   const [ready, setReady] = useState(false); // model-viewer script loaded
   const [hasModel, setHasModel] = useState<boolean | null>(null); // null = checking
-  const modelSrc = "/assets/model.glb"; // expected model location
-  const posterSrc = "/assets/gltf_embedded_0.jpeg"; // optional preview
+  // When deploying to a subpath (GitHub Pages) use Vite's BASE_URL so public/ assets resolve correctly
+  const modelSrc = import.meta.env.BASE_URL + "assets/model.glb"; // expected model location
+  const posterSrc = import.meta.env.BASE_URL + "assets/gltf_embedded_0.jpeg"; // optional preview
 
   // Load the web component script once
   useEffect(() => {
@@ -123,7 +124,7 @@ export default function GrypGlovesLanding() {
       <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-slate-950/70 border-b border-white/10">
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/assets/1.png" alt="GRYP Gloves wordmark" className="hidden sm:block h-10" />
+            <img src={import.meta.env.BASE_URL + "assets/1.png"} alt="GRYP Gloves wordmark" className="hidden sm:block h-10" />
             <span className="sm:hidden text-lg font-semibold tracking-tight">GRYP Gloves</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -144,7 +145,7 @@ export default function GrypGlovesLanding() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <Badge className="mb-4 bg-white/10 text-violet-200 border border-white/20">AI sports wellness</Badge>
-            <img src="/assets/1.png" alt="GRYP Gloves" className="mb-4 h-20 opacity-90" />
+            <img src={import.meta.env.BASE_URL + "assets/1.png"} alt="GRYP Gloves" className="mb-4 h-20 opacity-90" />
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
               Smart goalkeeper gloves
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400"> that learn from your hands</span>
@@ -280,7 +281,7 @@ export default function GrypGlovesLanding() {
                   {/* Replace the srcs below with real photos; they'll mask to a perfect circle */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={m.img}
+                    src={import.meta.env.BASE_URL + m.img.replace(/^\//, "")}
                     alt={m.name}
                     className="absolute inset-0 h-full w-full object-cover"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
