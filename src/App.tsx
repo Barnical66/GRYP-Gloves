@@ -1,5 +1,5 @@
 /// <reference path="./vite-env.d.ts" />
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type React from "react";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
@@ -11,6 +11,8 @@ import { Check, Shield, Activity, Sparkles, Cpu, Droplets, Leaf, Gauge, Trending
 function ModelViewer3D() {
   const [ready, setReady] = useState(false); // model-viewer script loaded
   const [hasModel, setHasModel] = useState<boolean | null>(null); // null = checking
+  const [modelLoaded, setModelLoaded] = useState(false); // actual GLB finished loading
+  const mvRef = useRef<HTMLElement | null>(null);
   // When deploying to a subpath (GitHub Pages) use Vite's BASE_URL so public/ assets resolve correctly
   const modelSrc = import.meta.env.BASE_URL + "assets/model.glb"; // expected model location
   const posterSrc = import.meta.env.BASE_URL + "assets/gltf_embedded_0.jpeg"; // optional preview
@@ -45,6 +47,20 @@ function ModelViewer3D() {
     return () => { cancelled = true; };
   }, [modelSrc]);
 
+  // Listen for the model-viewer "load" event to detect when the GLB is ready
+  useEffect(() => {
+    if (!mvRef.current) return;
+    const el = mvRef.current as Element;
+    const onLoad = () => setModelLoaded(true);
+    const onError = () => setModelLoaded(false);
+    el.addEventListener("load", onLoad as EventListener);
+    el.addEventListener("error", onError as EventListener);
+    return () => {
+      el.removeEventListener("load", onLoad as EventListener);
+      el.removeEventListener("error", onError as EventListener);
+    };
+  }, [mvRef.current]);
+
   // Fallback UI if model missing
   if (hasModel === false || !ready) {
     return (
@@ -67,6 +83,7 @@ function ModelViewer3D() {
   return (
     <div className="relative">
       <model-viewer
+        ref={mvRef as any}
         src={modelSrc}
         poster={posterSrc}
         alt="GRYP Gloves 3D Model"
@@ -87,6 +104,16 @@ function ModelViewer3D() {
         {/* Hotspots (placeholder coordinates; adjust after GLB import) */}
         
       </model-viewer>
+
+      {/* Loading overlay while the GLB is fetching/rendering */}
+      {ready && hasModel && !modelLoaded ? (
+        <div className="absolute inset-0 z-20 grid place-items-center pointer-events-none">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-white/60 animate-spin" />
+            <div className="text-sm text-slate-300">Loading 3D model…</div>
+          </div>
+        </div>
+      ) : null}
 
       <style>{`
         .hotspot {
