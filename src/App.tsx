@@ -16,8 +16,6 @@ function ModelViewer3D() {
   // When deploying to a subpath (GitHub Pages) use Vite's BASE_URL so public/ assets resolve correctly
   const modelSrc = import.meta.env.BASE_URL + "assets/model.glb"; // expected model location
   const posterSrc = import.meta.env.BASE_URL + "assets/gltf_embedded_0.jpeg"; // optional preview
-  // We'll let the browser and <model-viewer> fetch the model directly but add a preload hint
-  const modelUrl = modelSrc;
 
   // Load the web component script once
   useEffect(() => {
@@ -48,33 +46,6 @@ function ModelViewer3D() {
     })();
     return () => { cancelled = true; };
   }, [modelSrc]);
-
-  // Preload poster + add a preload hint for the GLB so browsers prioritize fetching it for faster display.
-  useEffect(() => {
-    try {
-      const linkImg = document.createElement('link');
-      linkImg.rel = 'preload';
-      linkImg.as = 'image';
-      linkImg.href = posterSrc;
-      document.head.appendChild(linkImg);
-    } catch (e) {
-      // ignore
-    }
-
-    try {
-      const linkModel = document.createElement('link');
-      linkModel.rel = 'preload';
-      // using 'fetch' lets the browser treat it as a resource to fetch; some servers may want 'as=fetch'
-      linkModel.as = 'fetch';
-      linkModel.href = modelSrc;
-      linkModel.type = 'model/gltf-binary';
-      // allow cross-origin if needed
-      linkModel.crossOrigin = 'anonymous';
-      document.head.appendChild(linkModel);
-    } catch (e) {
-      // ignore
-    }
-  }, [modelSrc, posterSrc]);
 
   // Listen for the model-viewer "load" event to detect when the GLB is ready
   useEffect(() => {
@@ -113,7 +84,7 @@ function ModelViewer3D() {
     <div className="relative">
       <model-viewer
         ref={mvRef as any}
-  src={modelUrl}
+        src={modelSrc}
         poster={posterSrc}
         alt="GRYP Gloves 3D Model"
         camera-controls
