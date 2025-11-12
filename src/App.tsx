@@ -94,7 +94,6 @@ function ModelViewer3D() {
 
   return (
     <div className="relative">
-      {/* @ts-ignore custom element */}
       <model-viewer
         src={modelSrc}
         poster={posterSrc}
