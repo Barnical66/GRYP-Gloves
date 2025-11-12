@@ -49,15 +49,55 @@ function ModelViewer3D() {
 
   // Listen for the model-viewer "load" event to detect when the GLB is ready
   useEffect(() => {
+    let interval: number | undefined;
+    let timeout: number | undefined;
     if (!mvRef.current) return;
-    const el = mvRef.current as Element;
-    const onLoad = () => setModelLoaded(true);
-    const onError = () => setModelLoaded(false);
-    el.addEventListener("load", onLoad as EventListener);
-    el.addEventListener("error", onError as EventListener);
+    const el = mvRef.current as any;
+
+    const onLoad = () => {
+      setModelLoaded(true);
+      if (interval) window.clearInterval(interval);
+      if (timeout) window.clearTimeout(timeout);
+    };
+    const onError = () => {
+      setModelLoaded(false);
+      if (interval) window.clearInterval(interval);
+      if (timeout) window.clearTimeout(timeout);
+    };
+
+    try {
+      el.addEventListener("load", onLoad as EventListener);
+      el.addEventListener("error", onError as EventListener);
+    } catch (_) {
+      // ignore
+    }
+
+    // Some browsers (mobile) may fire load before our listener is attached or use different internals.
+    // Poll the element's shadowRoot for a rendered canvas as a fallback signal that rendering started.
+    interval = window.setInterval(() => {
+      try {
+        const sr = (el as Element).shadowRoot as ShadowRoot | null;
+        if (sr && sr.querySelector("canvas")) {
+          onLoad();
+        }
+      } catch (_) {
+        // ignore cross-origin or closed shadow errors
+      }
+    }, 500);
+
+    // Safety timeout: give up after 12s and hide spinner to avoid permanent loading state
+    timeout = window.setTimeout(() => {
+      setModelLoaded(true);
+      if (interval) window.clearInterval(interval);
+    }, 12000);
+
     return () => {
-      el.removeEventListener("load", onLoad as EventListener);
-      el.removeEventListener("error", onError as EventListener);
+      try {
+        el.removeEventListener("load", onLoad as EventListener);
+        el.removeEventListener("error", onError as EventListener);
+      } catch (_) {}
+      if (interval) window.clearInterval(interval);
+      if (timeout) window.clearTimeout(timeout);
     };
   }, [mvRef.current]);
 
@@ -183,12 +223,7 @@ export default function GrypGlovesLanding() {
             <div className="mt-6">
               <Button size="lg" className="w-full sm:w-auto sm:min-w-[260px] px-8 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500">Get early access</Button>
             </div>
-            <div className="mt-6 flex items-center gap-3 text-slate-400 text-sm">
-              <Shield className="h-4 w-4" /> CE safety ready
-              <Droplets className="h-4 w-4" /> Sweat resistant
-              <Leaf className="h-4 w-4" /> Recyclable parts
             </div>
-          </div>
 
           {/* 3D product card */}
           <Card className="bg-white/5 border-white/10 rounded-3xl">
@@ -207,9 +242,9 @@ export default function GrypGlovesLanding() {
       {/* Social proof */}
       <section className="py-6 border-y border-white/10 bg-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-8 text-slate-400 text-sm">
-          <span>Backed by sports engineers</span>
+          <span>FIFA Law 4 compliant design</span>
           <span className="h-1 w-1 rounded-full bg-slate-600" />
-          <span>Prototype tested with amateur goalkeepers</span>
+          <span>Adaptive Spine System</span>
           <span className="h-1 w-1 rounded-full bg-slate-600" />
           <span>Designed for youth and adult sizes</span>
         </div>
