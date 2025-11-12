@@ -16,8 +16,8 @@ function ModelViewer3D() {
   // When deploying to a subpath (GitHub Pages) use Vite's BASE_URL so public/ assets resolve correctly
   const modelSrc = import.meta.env.BASE_URL + "assets/model.glb"; // expected model location
   const posterSrc = import.meta.env.BASE_URL + "assets/gltf_embedded_0.jpeg"; // optional preview
-  // modelUrl may be replaced with a blob URL if we prefetch the file to warm the cache and enable faster display
-  const [modelUrl, setModelUrl] = useState<string>(modelSrc);
+  // We'll let the browser and <model-viewer> fetch the model directly but add a preload hint
+  const modelUrl = modelSrc;
 
   // Load the web component script once
   useEffect(() => {
@@ -49,9 +49,8 @@ function ModelViewer3D() {
     return () => { cancelled = true; };
   }, [modelSrc]);
 
-  // Preload poster + start fetching the model early so it appears faster when the viewer mounts.
+  // Preload poster + add a preload hint for the GLB so browsers prioritize fetching it for faster display.
   useEffect(() => {
-    // Preload poster image
     try {
       const linkImg = document.createElement('link');
       linkImg.rel = 'preload';
@@ -62,26 +61,19 @@ function ModelViewer3D() {
       // ignore
     }
 
-    // Preload/fetch model to warm the browser cache. We fetch and create a blob URL so the <model-viewer>
-    // can use a same-origin object URL which sometimes loads faster.
-    const controller = new AbortController();
-    (async () => {
-      try {
-        const res = await fetch(modelSrc, { signal: controller.signal });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        setModelUrl(url);
-      } catch (e) {
-        // fetch failed or aborted; leave modelUrl pointing to remote path
-      }
-    })();
-
-    return () => {
-      controller.abort();
-      // revoke created blob URL when unmounting
-      setModelUrl(modelSrc);
-    };
+    try {
+      const linkModel = document.createElement('link');
+      linkModel.rel = 'preload';
+      // using 'fetch' lets the browser treat it as a resource to fetch; some servers may want 'as=fetch'
+      linkModel.as = 'fetch';
+      linkModel.href = modelSrc;
+      linkModel.type = 'model/gltf-binary';
+      // allow cross-origin if needed
+      linkModel.crossOrigin = 'anonymous';
+      document.head.appendChild(linkModel);
+    } catch (e) {
+      // ignore
+    }
   }, [modelSrc, posterSrc]);
 
   // Listen for the model-viewer "load" event to detect when the GLB is ready
@@ -121,7 +113,7 @@ function ModelViewer3D() {
     <div className="relative">
       <model-viewer
         ref={mvRef as any}
-        src={modelUrl}
+  src={modelUrl}
         poster={posterSrc}
         alt="GRYP Gloves 3D Model"
         camera-controls
