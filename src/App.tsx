@@ -176,11 +176,11 @@ export default function GrypGlovesLanding() {
 
       {/* Social proof */}
       <section className="py-6 border-y border-white/10 bg-white/5">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-8 text-slate-400 text-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-center gap-2 md:gap-8 text-slate-400 text-sm">
           <span>FIFA Law 4 compliant design</span>
-          <span className="h-1 w-1 rounded-full bg-slate-600" />
+          <span className="hidden md:inline h-1 w-1 rounded-full bg-slate-600" />
           <span>Adaptive Spine System</span>
-          <span className="h-1 w-1 rounded-full bg-slate-600" />
+          <span className="hidden md:inline h-1 w-1 rounded-full bg-slate-600" />
           <span>Designed for youth and adult sizes</span>
         </div>
       </section>
