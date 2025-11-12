@@ -11,7 +11,6 @@ import { Check, Shield, Activity, Sparkles, Cpu, Droplets, Leaf, Gauge, Trending
 function ModelViewer3D() {
   const [ready, setReady] = useState(false); // model-viewer script loaded
   const [hasModel, setHasModel] = useState<boolean | null>(null); // null = checking
-  const [modelLoaded, setModelLoaded] = useState(false); // actual GLB finished loading
   const mvRef = useRef<HTMLElement | null>(null);
   // When deploying to a subpath (GitHub Pages) use Vite's BASE_URL so public/ assets resolve correctly
   const modelSrc = import.meta.env.BASE_URL + "assets/model.glb"; // expected model location
@@ -46,60 +45,6 @@ function ModelViewer3D() {
     })();
     return () => { cancelled = true; };
   }, [modelSrc]);
-
-  // Listen for the model-viewer "load" event to detect when the GLB is ready
-  useEffect(() => {
-    let interval: number | undefined;
-    let timeout: number | undefined;
-    if (!mvRef.current) return;
-    const el = mvRef.current as any;
-
-    const onLoad = () => {
-      setModelLoaded(true);
-      if (interval) window.clearInterval(interval);
-      if (timeout) window.clearTimeout(timeout);
-    };
-    const onError = () => {
-      setModelLoaded(false);
-      if (interval) window.clearInterval(interval);
-      if (timeout) window.clearTimeout(timeout);
-    };
-
-    try {
-      el.addEventListener("load", onLoad as EventListener);
-      el.addEventListener("error", onError as EventListener);
-    } catch (_) {
-      // ignore
-    }
-
-    // Some browsers (mobile) may fire load before our listener is attached or use different internals.
-    // Poll the element's shadowRoot for a rendered canvas as a fallback signal that rendering started.
-    interval = window.setInterval(() => {
-      try {
-        const sr = (el as Element).shadowRoot as ShadowRoot | null;
-        if (sr && sr.querySelector("canvas")) {
-          onLoad();
-        }
-      } catch (_) {
-        // ignore cross-origin or closed shadow errors
-      }
-    }, 500);
-
-    // Safety timeout: give up after 12s and hide spinner to avoid permanent loading state
-    timeout = window.setTimeout(() => {
-      setModelLoaded(true);
-      if (interval) window.clearInterval(interval);
-    }, 12000);
-
-    return () => {
-      try {
-        el.removeEventListener("load", onLoad as EventListener);
-        el.removeEventListener("error", onError as EventListener);
-      } catch (_) {}
-      if (interval) window.clearInterval(interval);
-      if (timeout) window.clearTimeout(timeout);
-    };
-  }, [mvRef.current]);
 
   // Fallback UI if model missing
   if (hasModel === false || !ready) {
@@ -144,16 +89,6 @@ function ModelViewer3D() {
         {/* Hotspots (placeholder coordinates; adjust after GLB import) */}
         
       </model-viewer>
-
-      {/* Loading overlay while the GLB is fetching/rendering */}
-      {ready && hasModel && !modelLoaded ? (
-        <div className="absolute inset-0 z-20 grid place-items-center pointer-events-none">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-white/60 animate-spin" />
-            <div className="text-sm text-slate-300">Loading 3D model…</div>
-          </div>
-        </div>
-      ) : null}
 
       <style>{`
         .hotspot {
